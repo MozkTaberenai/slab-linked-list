@@ -2,6 +2,13 @@
 name = "slab-linked-list"
 version = "0.1.0"
 edition = "2021"
+authors = ["Mozk Taberenai <mozk@me.com>"]
+license = "MIT"
+description = "Linked list implemented on Slab"
+repository = "https://github.com/MozkTaberenai/slab-linked-list"
+homepage = "https://github.com/MozkTaberenai/slab-linked-list"
+categories = ["data-structures"]
+keywords = ["slab", "linked-list"]
 
 [dependencies]
 slab = "0.4.7"
