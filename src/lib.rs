@@ -1,12 +1,14 @@
 use slab::Slab;
 
+#[derive(Debug)]
 pub struct SlabLinkedList<T> {
-    slab: Slab<SlabLinkedListItem<T>>,
+    slab: Slab<Item<T>>,
     head: Option<usize>,
     tail: Option<usize>,
 }
 
 impl<T> Default for SlabLinkedList<T> {
+    #[inline]
     fn default() -> Self {
         Self {
             slab: Default::default(),
@@ -17,22 +19,27 @@ impl<T> Default for SlabLinkedList<T> {
 }
 
 impl<T> SlabLinkedList<T> {
+    #[inline]
     pub fn new() -> Self {
         Self::default()
     }
 
+    #[inline]
     pub fn len(&self) -> usize {
         self.slab.len()
     }
 
+    #[inline]
     pub fn is_empty(&self) -> bool {
         self.slab.is_empty()
     }
 
+    #[inline]
     pub fn get(&self, key: usize) -> Option<&T> {
         self.slab.get(key).map(|item| &item.value)
     }
 
+    #[inline]
     pub fn front(&self) -> Option<&T> {
         match self.head {
             None => None,
@@ -43,6 +50,7 @@ impl<T> SlabLinkedList<T> {
         }
     }
 
+    #[inline]
     pub fn back(&self) -> Option<&T> {
         match self.tail {
             None => None,
@@ -53,9 +61,10 @@ impl<T> SlabLinkedList<T> {
         }
     }
 
+    #[inline]
     #[track_caller]
     pub fn insert_before(&mut self, value: T, target_key: usize) -> usize {
-        let key = self.slab.insert(SlabLinkedListItem::from(value));
+        let key = self.slab.insert(Item::from(value));
         let (item, target_item) = self.slab.get2_mut(key, target_key).expect("invalid key");
         item.key.replace(key);
         item.next.replace(target_key);
@@ -74,9 +83,10 @@ impl<T> SlabLinkedList<T> {
         key
     }
 
+    #[inline]
     #[track_caller]
     pub fn insert_after(&mut self, value: T, target_key: usize) -> usize {
-        let key = self.slab.insert(SlabLinkedListItem::from(value));
+        let key = self.slab.insert(Item::from(value));
         let (item, target_item) = self.slab.get2_mut(key, target_key).expect("invalid key");
         item.key.replace(key);
         item.prev.replace(target_key);
@@ -95,9 +105,10 @@ impl<T> SlabLinkedList<T> {
         key
     }
 
+    #[inline]
     fn insert_first_item(&mut self, value: T) -> usize {
         assert!(self.slab.is_empty());
-        let key = self.slab.insert(SlabLinkedListItem::from(value));
+        let key = self.slab.insert(Item::from(value));
         assert_eq!(self.head.replace(key), None);
         assert_eq!(self.tail.replace(key), None);
         let item = self.slab.get_mut(key).unwrap();
@@ -105,6 +116,7 @@ impl<T> SlabLinkedList<T> {
         key
     }
 
+    #[inline]
     pub fn push_front(&mut self, value: T) -> usize {
         match self.head {
             None => self.insert_first_item(value),
@@ -112,6 +124,7 @@ impl<T> SlabLinkedList<T> {
         }
     }
 
+    #[inline]
     pub fn push_back(&mut self, value: T) -> usize {
         match self.tail {
             None => self.insert_first_item(value),
@@ -119,6 +132,7 @@ impl<T> SlabLinkedList<T> {
         }
     }
 
+    #[inline]
     #[track_caller]
     pub fn pop_front(&mut self) -> Option<T> {
         let key = self.head?;
@@ -126,6 +140,7 @@ impl<T> SlabLinkedList<T> {
         Some(value)
     }
 
+    #[inline]
     #[track_caller]
     pub fn pop_back(&mut self) -> Option<T> {
         let key = self.tail?;
@@ -133,12 +148,13 @@ impl<T> SlabLinkedList<T> {
         Some(value)
     }
 
+    #[inline]
     pub fn try_remove(&mut self, key: usize) -> Option<T> {
         let Some(item) = self.slab.try_remove(key) else {
             return None;
         };
 
-        let SlabLinkedListItem {
+        let Item {
             value,
             key: stored_key,
             prev,
@@ -175,20 +191,23 @@ impl<T> SlabLinkedList<T> {
         Some(value)
     }
 
+    #[inline]
     #[track_caller]
     pub fn remove(&mut self, key: usize) -> T {
         self.try_remove(key).expect("invalid key")
     }
 }
 
-struct SlabLinkedListItem<T> {
+#[derive(Debug)]
+struct Item<T> {
     value: T,
     key: Option<usize>,
     prev: Option<usize>,
     next: Option<usize>,
 }
 
-impl<T> From<T> for SlabLinkedListItem<T> {
+impl<T> From<T> for Item<T> {
+    #[inline]
     fn from(value: T) -> Self {
         Self {
             value,
