@@ -121,20 +121,22 @@ impl<T> SlabLinkedList<T> {
 
     #[track_caller]
     pub fn pop_front(&mut self) -> Option<T> {
-        let Some(key) = self.head else { return None };
+        let key = self.head?;
         let value = self.remove(key);
         Some(value)
     }
 
     #[track_caller]
     pub fn pop_back(&mut self) -> Option<T> {
-        let Some(key) = self.tail else { return None };
+        let key = self.tail?;
         let value = self.remove(key);
         Some(value)
     }
 
     pub fn try_remove(&mut self, key: usize) -> Option<T> {
-        let Some(item) = self.slab.try_remove(key) else { return None };
+        let Some(item) = self.slab.try_remove(key) else {
+            return None;
+        };
 
         let SlabLinkedListItem {
             value,
