@@ -107,12 +107,15 @@ impl<T> SlabLinkedList<T> {
 
     #[inline]
     fn insert_first_item(&mut self, value: T) -> usize {
-        assert!(self.slab.is_empty());
+        debug_assert!(self.slab.is_empty());
+        debug_assert!(self.head.is_none());
+        debug_assert!(self.tail.is_none());
         let key = self.slab.insert(Item::from(value));
-        assert_eq!(self.head.replace(key), None);
-        assert_eq!(self.tail.replace(key), None);
-        let item = self.slab.get_mut(key).unwrap();
-        item.key.replace(key);
+        self.head.replace(key);
+        self.tail.replace(key);
+        unsafe {
+            self.slab.get_unchecked_mut(key).key.replace(key);
+        }
         key
     }
 
@@ -161,13 +164,15 @@ impl<T> SlabLinkedList<T> {
             next,
         } = item;
 
-        assert_eq!(stored_key, Some(key));
+        debug_assert_eq!(stored_key, Some(key));
 
         match (prev, next) {
             (Some(prev), Some(next)) => {
                 let (prev_item, next_item) = self.slab.get2_mut(prev, next).unwrap();
-                assert_eq!(prev_item.next.replace(next), Some(key));
-                assert_eq!(next_item.prev.replace(prev), Some(key));
+                let prev_item_old_next = prev_item.next.replace(next);
+                debug_assert_eq!(prev_item_old_next, Some(key));
+                let next_item_old_prev = next_item.prev.replace(prev);
+                debug_assert_eq!(next_item_old_prev, Some(key));
             }
             (Some(prev), None) => {
                 // is tail
