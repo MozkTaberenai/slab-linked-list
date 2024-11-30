@@ -153,9 +153,7 @@ impl<T> SlabLinkedList<T> {
 
     #[inline]
     pub fn try_remove(&mut self, key: usize) -> Option<T> {
-        let Some(item) = self.slab.try_remove(key) else {
-            return None;
-        };
+        let item = self.slab.try_remove(key)?;
 
         let Item {
             value,
